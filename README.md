@@ -140,10 +140,9 @@ public class MainActivity extends Activity {
 
 
 Тема 2. Жизненный цикл сервисов и флаги перезапуска (Задание 1-5)
-
-
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application
+<img width="1909" height="1036" alt="image" src="https://github.com/user-attachments/assets/2ee5767c-35bd-413c-b444-632e76b6a740" />
+   <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+      <application
         android:allowBackup="true"
         android:label="Layout Mastery — Тема 2"
         android:supportsRtl="true"
