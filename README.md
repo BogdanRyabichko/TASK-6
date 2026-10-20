@@ -168,8 +168,7 @@ public class MainActivity extends Activity {
 
 
 Тема 3. Широковещательные приемники (Broadcast Receivers)
-
-![Uploading image.png…]()
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/a0051efe-34b7-44bf-830e-79fd3e9455d4" />
 
 package com.example.layoutmastery;
 
