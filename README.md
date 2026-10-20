@@ -1,4 +1,4 @@
-<img width="1038" height="326" alt="image" src="https://github.com/user-attachments/assets/062f4c38-8754-43e6-a0ea-9217b1ac0f03" /><img width="1038" height="326" alt="image" src="https://github.com/user-attachments/assets/1043726e-79ec-4cae-81f8-65584c929768" /><img width="1038" height="326" alt="image" src="https://github.com/user-attachments/assets/de328c7a-793f-48bb-9888-a1aa3c1ac78e" /><img width="644" height="576" alt="image" src="https://github.com/user-attachments/assets/7f5ddb47-a07e-44fb-bc7f-82df715ba805" />Тема 1. Сервисы (Services): Started, Bound и Foreground (задание 1-5)
+/>Тема 1. Сервисы (Services): Started, Bound и Foreground (задание 1-5)
 <img width="1911" height="1035" alt="image" src="https://github.com/user-attachments/assets/5da39cef-917d-4adb-ae4e-b87a7aed495e" />
 package com.example.layoutmastery;
 
