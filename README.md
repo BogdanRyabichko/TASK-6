@@ -716,7 +716,7 @@ class SocketService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 }
-![Uploading image.png…]()
+
 
 
     class VideoService : Service() {
@@ -738,6 +738,214 @@ class SocketService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 }
-![Uploading image.png…]()
 
+
+
+
+public class LogProvider extends ContentProvider {
+
+    public boolean onCreate() {
+        return true;
+    }
+
+    
+    public Cursor query(Uri uri, String[] projection,
+                        String selection, String[] args,
+                        String sortOrder) {
+        MatrixCursor cursor =
+            new MatrixCursor(new String[]{"id", "log"});
+
+        cursor.addRow(new Object[]{1, "Encrypted log"});
+        return cursor;
+
+
+
+
+    public String getType(Uri uri) {
+        return "vnd.android.cursor.dir/vnd.example.logs";
+    }
+
+    
+    public Uri insert(Uri uri, ContentValues values) {
+        return null;
+    }
+
+    
+    public int delete(Uri uri, String s, String[] args) {
+        return 0;
+    }
+
+    
+    public int update(Uri uri, ContentValues v,
+                      String s, String[] args) {
+        return 0;
+    }
+}
+
+
+
+public class VCardProvider extends ContentProvider {
+
+    
+    public ParcelFileDescriptor openFile(
+            Uri uri, String mode)
+            throws FileNotFoundException {
+
+        File file = new File(
+            getContext().getCacheDir(),
+            "contact.vcf"
+        );
+
+        return ParcelFileDescriptor.open(
+            file,
+            ParcelFileDescriptor.MODE_READ_ONLY
+        );
+    }
+
+    @Override
+    public boolean onCreate() {
+        return true;
+    }
+}
+
+
+
+<img width="752" height="268" alt="image" src="https://github.com/user-attachments/assets/b37500c9-4c4e-4245-886d-a11dc190b628" />
+
+public int bulkInsert(Uri uri, ContentValues[] values) {
+    SQLiteDatabase db = dbHelper.getWritableDatabase();
+    int count = 0;
+
+    db.beginTransaction();
+    try {
+        for (ContentValues value : values) {
+            long id = db.insert(
+                "products", null, value
+            );
+
+            if (id != -1) count++;
+        }
+
+        db.setTransactionSuccessful();
+    } finally {
+        db.endTransaction();
+    }
+
+    return count;
+
+
+<img width="1038" height="326" alt="image" src="https://github.com/user-attachments/assets/3206d7de-ffc1-4fb9-a383-a2a7d4fe6730" />
+
+public int bulkInsert(Uri uri, ContentValues[] values) {
+    SQLiteDatabase db = dbHelper.getWritableDatabase();
+    int count = 0;
+
+    db.beginTransaction();
+    try {
+        for (ContentValues value : values) {
+            long id = db.insert(
+                "products", null, value
+            );
+
+            if (id != -1) count++;
+        }
+
+        db.setTransactionSuccessful();
+    } finally {
+        db.endTransaction();
+    }
+
+    return count;
+
+
+<img width="420" height="224" alt="image" src="https://github.com/user-attachments/assets/c532612a-74f4-475c-b141-ba2ad2dd75e1" />
+
+public int bulkInsert(Uri uri, ContentValues[] values) {
+    SQLiteDatabase db = dbHelper.getWritableDatabase();
+    int count = 0;
+
+    db.beginTransaction();
+    try {
+        for (ContentValues value : values) {
+            long id = db.insert(
+                "products", null, value
+            );
+
+            if (id != -1) count++;
+        }
+
+        db.setTransactionSuccessful();
+    } finally {
+        db.endTransaction();
+    }
+
+    return count;
+}
+
+
+![Uploading image.png…]()
+ContentValues[] products = new ContentValues[10000];
+
+for (int i = 0; i < products.length; i++) {
+    ContentValues item = new ContentValues();
+    item.put("name", "Product " + i);
+    item.put("price", i + 10);
+    products[i] = item;
+}
+
+int inserted = getContentResolver().bulkInsert(
+    Uri.parse("content://com.example.productprovider/products"),
+    products
+);
+
+Log.d("ProductProvider", "Добавлено строк: " + inserted);
+
+
+![Uploading image.png…]()
+ContentValues[] products = new ContentValues[10000];
+
+for (int i = 0; i < products.length; i++) {
+    ContentValues item = new ContentValues();
+    item.put("name", "Product " + i);
+    item.put("price", i + 10);
+    products[i] = item;
+}
+
+int inserted = getContentResolver().bulkInsert(
+    Uri.parse("content://com.example.productprovider/products"),
+    products
+);
+
+Log.d("ProductProvider", "Добавлено строк: " + inserted);
+
+
+
+![Uploading image.png…]()
+class TimedService : Service() {
+
+    private val handler = Handler(Looper.getMainLooper())
+
+    private val stopRunnable = Runnable {
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+
+        // Уведомление должно быть создано заранее
+        // и передано в startForeground().
+        handler.postDelayed(
+            stopRunnable,
+            30 * 60 * 1000L
+        )
+    }
+
+    override fun onDestroy() {
+        handler.removeCallbacks(stopRunnable)
+        super.onDestroy()
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+}
 
