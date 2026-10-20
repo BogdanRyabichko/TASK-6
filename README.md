@@ -720,7 +720,7 @@ class SocketService : Service() {
 ![Uploading image.png…]()
 
 
-..........class VideoService : Service() {
+    class VideoService : Service() {
 
     private val executor =
         Executors.newSingleThreadExecutor()
@@ -740,3 +740,5 @@ class SocketService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 }
 ![Uploading image.png…]()
+
+
