@@ -140,7 +140,7 @@ public class MainActivity extends Activity {
 
 
 Тема 2. Жизненный цикл сервисов и флаги перезапуска (Задание 1-5)
-![Uploading image.png…]()
+
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
@@ -169,7 +169,7 @@ public class MainActivity extends Activity {
 
 
 Тема 3. Широковещательные приемники (Broadcast Receivers)
-![Uploading image.png…]()
+<img width="271" height="352" alt="image" src="https://github.com/user-attachments/assets/45c164f3-dd37-459b-aa47-20e607521858" />
 
 package com.example.layoutmastery;
 
@@ -506,18 +506,237 @@ class MyContentProvider : ContentProvider() {
 
 50 СМЕШАННЫХ ЗАДАНИЙ
 
-Блок 1: Фоновые службы, медиа и геотрекинг (Services)
-1
+
 <img width="1388" height="569" alt="image" src="https://github.com/user-attachments/assets/288cf6c2-2fe0-495e-8bf1-f51e6e16d766" />
-2
+class StepService : Service(), SensorEventListener {
+
+    private lateinit var sensorManager: SensorManager
+    private var steps = 0
+    private val handler = Handler(Looper.getMainLooper())
+
+    override fun onCreate() {
+        super.onCreate()
+
+        sensorManager = getSystemService(SENSOR_SERVICE)
+                as SensorManager
+
+        val sensor = sensorManager.getDefaultSensor(
+            Sensor.TYPE_STEP_COUNTER
+        )
+
+        sensor?.let {
+            sensorManager.registerListener(
+                this, it, SensorManager.SENSOR_DELAY_NORMAL
+            )
+        }
+
+        startForeground(1, createNotification())
+        handler.post(updateRunnable)
+    }
+
+    private val updateRunnable = object : Runnable {
+        override fun run() {
+            updateNotification()
+            handler.postDelayed(this, 10_000)
+        }
+    }
+
+    override fun onSensorChanged(event: SensorEvent) {
+        steps = event.values[0].toInt()
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+
+    private fun createNotification(): Notification {
+        val channelId = "steps"
+        if (Build.VERSION.SDK_INT >= 26) {
+            val channel = NotificationChannel(
+                channelId, "Шагомер",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            getSystemService(NotificationManager::class.java)
+                .createNotificationChannel(channel)
+        }
+
+        return NotificationCompat.Builder(this, channelId)
+            .setContentTitle("Шагомер")
+            .setContentText("Шаги: $steps")
+            .setSmallIcon(android.R.drawable.ic_menu_compass)
+            .build()
+    }
+
+    private fun updateNotification() {
+        getSystemService(NotificationManager::class.java)
+            .notify(1, createNotification())
+    }
+
+    override fun onDestroy() {
+        handler.removeCallbacks(updateRunnable)
+        sensorManager.unregisterListener(this)
+        super.onDestroy()
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+}
+
+
+
+val playIntent = Intent(this, PlayerService::class.java)
+    .setAction("PLAY")
+
+val playPendingIntent = PendingIntent.getService(
+    this, 1, playIntent,
+    PendingIntent.FLAG_UPDATE_CURRENT or
+        PendingIntent.FLAG_IMMUTABLE
+)
+
+val notification = NotificationCompat.Builder(this, "music")
+    .setContentTitle("Музыкальный плеер")
+    .setContentText("Воспроизведение")
+    .setSmallIcon(android.R.drawable.ic_media_play)
+    .addAction(0, "Play", playPendingIntent)
+    .build()
 <img width="271" height="352" alt="image" src="https://github.com/user-attachments/assets/7e551fee-163e-414e-bb20-0f604b2330b0" />
-3
+
+
+
+class DownloadService : Service() {
+
+    override fun onStartCommand(
+        intent: Intent?, flags: Int, startId: Int
+    ): Int {
+        Thread {
+            for (i in 1..100) {
+                // Здесь выполняется загрузка файла
+                val progress = i
+
+                Log.d("DownloadService", "$progress%")
+            }
+            stopSelf(startId)
+        }.start()
+
+        return START_REDELIVER_INTENT
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+}
 <img width="199" height="255" alt="image" src="https://github.com/user-attachments/assets/3bd0b2f7-4107-41fc-9875-216bf86ec4b0" />
-4
+
+
+
+class SocketService : Service() {
+
+    private val handler = Handler(Looper.getMainLooper())
+
+    private fun reconnect() {
+        handler.postDelayed({
+            connectSocket()
+        }, 5000)
+    }
+
+    private fun connectSocket() {
+        // Создать WebSocket-клиент и подключиться
+        Log.d("SocketService", "Подключение к серверу")
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        connectSocket()
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+}
 <img width="195" height="253" alt="image" src="https://github.com/user-attachments/assets/5cb0a805-0947-43a5-99d3-902504c05bbf" />
-5
-<img width="205" height="247" alt="image" src="https://github.com/user-attachments/assets/9f9626e1-c075-4e63-8c45-15036f4beb16" />
-6
+
+
+class SocketService : Service() {
+
+    private val handler = Handler(Looper.getMainLooper())
+
+    private fun reconnect() {
+        handler.postDelayed({
+            connectSocket()
+        }, 5000)
+    }
+
+    private fun connectSocket() {
+        // Создать WebSocket-клиент и подключиться
+        Log.d("SocketService", "Подключение к серверу")
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        connectSocket()
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+}<img width="205" height="247" alt="image" src="https://github.com/user-attachments/assets/9f9626e1-c075-4e63-8c45-15036f4beb16" />
+
+
+
+class VideoService : Service() {
+
+    private val executor =
+        Executors.newSingleThreadExecutor()
+
+    fun compressVideo(path: String) {
+        executor.execute {
+            Log.d("VideoService", "Обработка: $path")
+            // Передать видео в библиотеку перекодирования
+        }
+    }
+
+    override fun onDestroy() {
+        executor.shutdown()
+        super.onDestroy()
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+}
 <img width="202" height="246" alt="image" src="https://github.com/user-attachments/assets/45bd0db3-29c9-429f-9a16-0812096b420c" />
 
+class SocketService : Service() {
 
+    private val handler = Handler(Looper.getMainLooper())
+
+    private fun reconnect() {
+        handler.postDelayed({
+            connectSocket()
+        }, 5000)
+    }
+
+    private fun connectSocket() {
+        // Создать WebSocket-клиент и подключиться
+        Log.d("SocketService", "Подключение к серверу")
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        connectSocket()
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+}
+![Uploading image.png…]()
+
+
+..........class VideoService : Service() {
+
+    private val executor =
+        Executors.newSingleThreadExecutor()
+
+    fun compressVideo(path: String) {
+        executor.execute {
+            Log.d("VideoService", "Обработка: $path")
+            // Передать видео в библиотеку перекодирования
+        }
+    }
+
+    override fun onDestroy() {
+        executor.shutdown()
+        super.onDestroy()
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+}
+![Uploading image.png…]()
