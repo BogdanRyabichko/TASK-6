@@ -1,1 +1,523 @@
-# TASK-6
+Тема 1. Сервисы (Services): Started, Bound и Foreground (задание 1-5)
+<img width="1911" height="1035" alt="image" src="https://github.com/user-attachments/assets/5da39cef-917d-4adb-ae4e-b87a7aed495e" />
+package com.example.layoutmastery;
+
+import android.Manifest;
+import android.app.Activity;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.layoutmastery.providers.NotesProvider;
+import com.example.layoutmastery.services.CountdownService;
+import com.example.layoutmastery.services.DownloadService;
+import com.example.layoutmastery.services.MusicForegroundService;
+import com.example.layoutmastery.services.ProcessInfoService;
+
+public class MainActivity extends Activity {
+    private static final int REQUEST_NOTIFICATIONS = 1001;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        ScrollView scroll = new ScrollView(this);
+        LinearLayout page = new LinearLayout(this);
+        page.setOrientation(LinearLayout.VERTICAL);
+        int pad = dp(18);
+        page.setPadding(pad, pad, pad, pad);
+        page.setBackgroundColor(0xFFF8FAFC);
+
+        TextView title = new TextView(this);
+        title.setText("Layout Mastery\nAndroid system components");
+        title.setTextSize(25);
+        title.setTextColor(0xFF172554);
+        title.setPadding(0, 0, 0, dp(8));
+        page.addView(title);
+
+        TextView intro = new TextView(this);
+        intro.setText("Практика: Services • Broadcast Receivers • Content Providers\n\nЗапускайте примеры кнопками ниже. Подробности и теория — в README.md.");
+        intro.setTextSize(15);
+        intro.setTextColor(0xFF334155);
+        intro.setPadding(0, 0, 0, dp(16));
+        page.addView(intro);
+
+        addButton(page, "1. Запустить таймер 60 секунд", v ->
+                startService(new Intent(this, CountdownService.class)));
+
+        addButton(page, "2. Запустить Foreground Service", v -> startMusicService());
+
+        addButton(page, "Остановить Foreground Service", v ->
+                stopService(new Intent(this, MusicForegroundService.class)));
+
+        addButton(page, "3. Запустить задачу загрузки (stopSelf)", v ->
+                startService(new Intent(this, DownloadService.class)));
+
+        addButton(page, "4. Запустить сервис в отдельном процессе", v ->
+                startService(new Intent(this, ProcessInfoService.class)));
+
+        addButton(page, "Broadcast Receiver: отправить событие", v -> {
+            Intent intent = new Intent(this, com.example.layoutmastery.receivers.DemoBroadcastReceiver.class);
+            intent.setAction("com.example.layoutmastery.ACTION_DEMO");
+            intent.putExtra("message", "Событие получено из MainActivity");
+            sendBroadcast(intent);
+            Toast.makeText(this, "Broadcast отправлен. Проверьте Logcat.", Toast.LENGTH_SHORT).show();
+        });
+
+        addButton(page, "Content Provider: добавить тестовую запись", v -> {
+            android.content.ContentValues values = new android.content.ContentValues();
+            values.put(NotesProvider.COLUMN_TITLE, "Тестовая заметка");
+            values.put(NotesProvider.COLUMN_BODY, "Запись создана через ContentResolver");
+            android.net.Uri uri = getContentResolver().insert(NotesProvider.CONTENT_URI, values);
+            Toast.makeText(this, "Добавлено: " + uri, Toast.LENGTH_LONG).show();
+        });
+
+        addButton(page, "Content Provider: прочитать записи", v -> {
+            try (android.database.Cursor cursor = getContentResolver().query(
+                    NotesProvider.CONTENT_URI, null, null, null, "_id DESC")) {
+                int count = cursor == null ? 0 : cursor.getCount();
+                Toast.makeText(this, "Записей в Provider: " + count, Toast.LENGTH_LONG).show();
+            }
+        });
+
+        TextView footer = new TextView(this);
+        footer.setText("\nПодсказка: для просмотра Logcat выберите фильтр по тегам CountdownService, DownloadService, ProcessInfoService или DemoReceiver.");
+        footer.setTextSize(13);
+        footer.setTextColor(0xFF64748B);
+        page.addView(footer);
+
+        scroll.addView(page);
+        setContentView(scroll);
+    }
+
+    private void startMusicService() {
+        if (Build.VERSION.SDK_INT >= 33 &&
+                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_NOTIFICATIONS);
+            return;
+        }
+        Intent intent = new Intent(this, MusicForegroundService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent);
+        } else {
+            startService(intent);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_NOTIFICATIONS && grantResults.length > 0 &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            startMusicService();
+        } else if (requestCode == REQUEST_NOTIFICATIONS) {
+            Toast.makeText(this, "Разрешение на уведомления не выдано. Попробуйте снова или разрешите его в настройках.", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void addButton(LinearLayout parent, String label, android.view.View.OnClickListener listener) {
+        Button button = new Button(this);
+        button.setText(label);
+        button.setAllCaps(false);
+        button.setOnClickListener(listener);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.bottomMargin = dp(8);
+        parent.addView(button, lp);
+    }
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
+    }
+}
+
+
+
+Тема 2. Жизненный цикл сервисов и флаги перезапуска (Задание 1-5)
+![Uploading image.png…]()
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:allowBackup="true"
+        android:label="Layout Mastery — Тема 2"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service android:name=".services.RandomNumberService" android:exported="false" />
+        <service android:name=".services.StickyCounterService" android:exported="false" />
+        <service android:name=".services.RebindService" android:exported="false" />
+        <service android:name=".services.MultiClientService" android:exported="false" />
+        <service android:name=".services.CombinedService" android:exported="false" />
+    </application>
+</manifest>
+
+
+
+Тема 3. Широковещательные приемники (Broadcast Receivers)
+![Uploading image.png…]()
+
+package com.example.layoutmastery;
+
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Bundle;
+import android.graphics.Typeface;
+import android.view.View;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
+public class MainActivity extends AppCompatActivity {
+
+    private TextView resultText;
+    private BroadcastReceiver batteryReceiver;
+    private BroadcastReceiver airplaneReceiver;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        ScrollView scrollView = new ScrollView(this);
+        LinearLayout page = new LinearLayout(this);
+        page.setOrientation(LinearLayout.VERTICAL);
+        page.setPadding(20, 20, 20, 20);
+        page.setBackgroundColor(0xFFF8FAFC);
+
+        TextView title = new TextView(this);
+        title.setText("Broadcast Receivers - Практическая работа");
+        title.setTextSize(22);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setTextColor(0xFF172554);
+        page.addView(title);
+
+        TextView description = new TextView(this);
+        description.setText(
+                "Демонстрация работы широковещательных " +
+                "приёмников (Broadcast Receivers)."
+        );
+        description.setTextSize(14);
+        description.setPadding(0, 16, 0, 16);
+        page.addView(description);
+
+        addButton(page, "1. Низкий заряд батареи",
+                v -> registerBatteryReceiver());
+
+        addButton(page, "2. Режим полета",
+                v -> registerAirplaneReceiver());
+
+        addButton(page, "3. После перезагрузки (статический)",
+                v -> sendBootTest());
+
+        addButton(page, "4. Кастомный бродкаст",
+                v -> sendCustomBroadcast());
+
+        addButton(page, "5. Упорядоченный бродкаст",
+                v -> sendOrderedTest());
+
+        TextView resultTitle = new TextView(this);
+        resultTitle.setText("Результат:");
+        resultTitle.setTextSize(16);
+        resultTitle.setTypeface(null, Typeface.BOLD);
+        resultTitle.setPadding(0, 20, 0, 8);
+        page.addView(resultTitle);
+
+        resultText = new TextView(this);
+        resultText.setText(
+                "Сообщения от приёмников появятся здесь..."
+        );
+        resultText.setTextSize(14);
+        resultText.setPadding(12, 12, 12, 12);
+        resultText.setBackgroundColor(0xFFE5EDFF);
+        page.addView(resultText);
+
+        scrollView.addView(page);
+        setContentView(scrollView);
+    }
+
+    private void addButton(
+            LinearLayout page,
+            String text,
+            View.OnClickListener listener
+    ) {
+        Button button = new Button(this);
+        button.setText(text);
+        button.setAllCaps(false);
+        button.setOnClickListener(listener);
+
+        LinearLayout.LayoutParams params =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+
+        params.setMargins(0, 4, 0, 4);
+        page.addView(button, params);
+    }
+
+    private void showResult(String message) {
+        resultText.append("\n" + message);
+    }
+
+    private void registerBatteryReceiver() {
+        if (batteryReceiver != null) {
+            showResult("Приёмник батареи уже зарегистрирован.");
+            return;
+        }
+
+        batteryReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                showResult("Низкий заряд батареи!");
+                Toast.makeText(
+                        context,
+                        "Низкий заряд батареи!",
+
+
+
+Тема 4. Жизненный цикл Broadcast Receiver и асинхронностьpackage com.example.broadcastapp
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/951691cf-3f99-4400-ad85-0b9f51f15838" />
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.os.Looper
+import android.util.Log
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import java.util.concurrent.TimeUnit
+
+class MyReceiver : BroadcastReceiver() {
+
+    override fun onReceive(context: Context, intent: Intent) {
+        // Проверяем, выполняется ли код в главном потоке
+        val isMainThread =
+            Looper.myLooper() == Looper.getMainLooper()
+
+        Log.d("MyReceiver", "Главный поток: $isMainThread")
+
+        // Передаём фоновую задачу в WorkManager
+        val request = OneTimeWorkRequestBuilder<DemoWorker>()
+            .setInitialDelay(5, TimeUnit.SECONDS)
+            .build()
+
+        WorkManager.getInstance(context).enqueue(request)
+
+        // Разрешаем короткую асинхронную операцию
+        val pendingResult = goAsync()
+
+        Thread {
+            try {
+                val prefs = context.getSharedPreferences(
+                    "app_prefs",
+                    Context.MODE_PRIVATE
+                )
+
+                prefs.edit()
+                    .putLong(
+                        "last_broadcast_time",
+                        System.currentTimeMillis()
+                    )
+                    .apply()
+
+                Log.d("MyReceiver", "Время события сохранено")
+            } finally {
+                // Обязательно сообщаем системе о завершении
+                pendingResult.finish()
+            }
+        }.start()
+    }
+}
+
+
+
+Тема 5. Поставщики контента (Content Providers) и UriMatcher
+<img width="767" height="484" alt="image" src="https://github.com/user-attachments/assets/1e544363-00c7-47db-baf4-da567c29837f" />
+public class NotesProvider extends ContentProvider {
+
+    public static final String AUTHORITY = "com.university.app.provider.notes";
+    public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/notes");
+
+    private static final int CODE_NOTES_DIR = 1;
+    private static final int CODE_NOTE_ITEM = 2;
+
+    private static final UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+
+    static {
+        uriMatcher.addURI(AUTHORITY, "notes", CODE_NOTES_DIR);
+        uriMatcher.addURI(AUTHORITY, "notes/#", CODE_NOTE_ITEM);
+    }
+
+    @Override
+    public boolean onCreate() {
+        // Инициализация локальной базы данных SQLite / Room
+        return true;
+    }
+
+    @Override
+    public Cursor query(Uri uri, String[] projection, String selection,
+                        String[] selectionArgs, String sortOrder) {
+        int match = uriMatcher.match(uri);
+        switch (match) {
+            case CODE_NOTES_DIR:
+                // Выборка всей таблицы
+                break;
+            case CODE_NOTE_ITEM:
+                // Извлечение конкретной записи по ID: ContentUris.parseId(uri)
+                break;
+            default:
+                throw new IllegalArgumentException("Неизвестный URI: " + uri);
+        }
+        return null;
+    }
+
+    @Override
+    public String getType(Uri uri) {
+        return switch (uriMatcher.match(uri)) {
+            case CODE_NOTES_DIR -> "vnd.android.cursor.dir/vnd.com.university.note";
+            case CODE_NOTE_ITEM -> "vnd.android.cursor.item/vnd.com.university.note";
+            default -> throw new IllegalArgumentException("Неизвестный URI: " + uri);
+        };
+    }
+
+    @Override
+    public Uri insert(Uri uri, ContentValues values) {
+        // Вставка в БД и уведомление наблюдателей
+        getContext().getContentResolver().notifyChange(uri, null);
+        return ContentUris.withAppendedId(CONTENT_URI, 1);
+    }
+
+    @Override
+    public int delete(Uri uri, String selection, String[] selectionArgs) {
+        return 0;
+    }
+
+    @Override
+    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+        return 0;
+    }
+}
+
+
+
+Тема 6. Жизненный цикл и потокобезопасность Content Provider
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/39687228-f9b2-4e8c-a765-9f435119a8aa" />
+class MyContentProvider : ContentProvider() {
+
+    private lateinit var helper: DatabaseHelper
+
+    override fun onCreate(): Boolean {
+        Log.i("InitOrder", "ContentProvider.onCreate()")
+        val ctx = context ?: return false
+        helper = DatabaseHelper(ctx)
+        return true
+    }
+
+    override fun query(
+        uri: Uri,
+        projection: Array<out String>?,
+        selection: String?,
+        selectionArgs: Array<out String>?,
+        sortOrder: String?
+    ): Cursor {
+        return helper.readableDatabase.query(
+            NoteContract.TABLE_NAME,
+            projection,
+            selection,
+            selectionArgs,
+            null,
+            null,
+            sortOrder
+        )
+    }
+
+    @Synchronized
+    override fun insert(
+        uri: Uri,
+        values: ContentValues?
+    ): Uri {
+        requireNotNull(values)
+
+        val id = helper.writableDatabase.insertOrThrow(
+            NoteContract.TABLE_NAME,
+            null,
+            values
+        )
+
+        return Uri.withAppendedPath(
+            NoteContract.CONTENT_URI,
+            id.toString()
+        )
+    }
+
+    @Synchronized
+    override fun update(
+        uri: Uri,
+        values: ContentValues?,
+        selection: String?,
+        selectionArgs: Array<out String>?
+    ): Int {
+        return helper.writableDatabase.update(
+            NoteContract.TABLE_NAME,
+            values,
+            selection,
+            selectionArgs
+        )
+    }
+
+    @Synchronized
+    override fun delete(
+        uri: Uri,
+        selection: String?,
+        selectionArgs: Array<out String>?
+    ): Int {
+        return helper.writableDatabase.delete(
+            NoteContract.TABLE_NAME,
+            selection,
+            selectionArgs
+        )
+    }
+
+    override fun getType(uri: Uri): String =
+        "vnd.android.cursor.dir/vnd.notes"
+}
+
+
+
+50 СМЕШАННЫХ ЗАДАНИЙ
+
+Блок 1: Фоновые службы, медиа и геотрекинг (Services)
+1
+<img width="1388" height="569" alt="image" src="https://github.com/user-attachments/assets/288cf6c2-2fe0-495e-8bf1-f51e6e16d766" />
+2
+<img width="271" height="352" alt="image" src="https://github.com/user-attachments/assets/7e551fee-163e-414e-bb20-0f604b2330b0" />
+3
+<img width="199" height="255" alt="image" src="https://github.com/user-attachments/assets/3bd0b2f7-4107-41fc-9875-216bf86ec4b0" />
+4
+<img width="195" height="253" alt="image" src="https://github.com/user-attachments/assets/5cb0a805-0947-43a5-99d3-902504c05bbf" />
+5
+<img width="205" height="247" alt="image" src="https://github.com/user-attachments/assets/9f9626e1-c075-4e63-8c45-15036f4beb16" />
+6
+<img width="202" height="246" alt="image" src="https://github.com/user-attachments/assets/45bd0db3-29c9-429f-9a16-0812096b420c" />
+
+
