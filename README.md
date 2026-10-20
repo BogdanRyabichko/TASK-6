@@ -1,4 +1,4 @@
-Тема 1. Сервисы (Services): Started, Bound и Foreground (задание 1-5)
+<img width="1038" height="326" alt="image" src="https://github.com/user-attachments/assets/062f4c38-8754-43e6-a0ea-9217b1ac0f03" /><img width="1038" height="326" alt="image" src="https://github.com/user-attachments/assets/1043726e-79ec-4cae-81f8-65584c929768" /><img width="1038" height="326" alt="image" src="https://github.com/user-attachments/assets/de328c7a-793f-48bb-9888-a1aa3c1ac78e" /><img width="644" height="576" alt="image" src="https://github.com/user-attachments/assets/7f5ddb47-a07e-44fb-bc7f-82df715ba805" />Тема 1. Сервисы (Services): Started, Bound и Foreground (задание 1-5)
 <img width="1911" height="1035" alt="image" src="https://github.com/user-attachments/assets/5da39cef-917d-4adb-ae4e-b87a7aed495e" />
 package com.example.layoutmastery;
 
@@ -578,6 +578,7 @@ class StepService : Service(), SensorEventListener {
     override fun onBind(intent: Intent?): IBinder? = null
 }
 
+![Uploading image.png…]()
 
 
 val playIntent = Intent(this, PlayerService::class.java)
@@ -741,6 +742,8 @@ class SocketService : Service() {
 
 
 
+<img width="1038" height="326" alt="image" src="https://github.com/user-attachments/assets/0175c84b-851b-4344-854e-a47b12b39803" />
+
 
 public class LogProvider extends ContentProvider {
 
@@ -783,6 +786,7 @@ public class LogProvider extends ContentProvider {
 }
 
 
+<img width="420" height="224" alt="image" src="https://github.com/user-attachments/assets/b7a0b5aa-9289-46c2-976f-faa4c1cbf638" />
 
 public class VCardProvider extends ContentProvider {
 
@@ -883,7 +887,7 @@ public int bulkInsert(Uri uri, ContentValues[] values) {
 }
 
 
-![Uploading image.png…]()
+<img width="644" height="576" alt="image" src="https://github.com/user-attachments/assets/e6376ae4-b2bd-49bb-99a2-639bbdadbd63" />
 ContentValues[] products = new ContentValues[10000];
 
 for (int i = 0; i < products.length; i++) {
@@ -901,7 +905,8 @@ int inserted = getContentResolver().bulkInsert(
 Log.d("ProductProvider", "Добавлено строк: " + inserted);
 
 
-![Uploading image.png…]()
+<img width="648" height="552" alt="image" src="https://github.com/user-attachments/assets/b90cb46c-c314-407f-83af-a31b861b971d" />
+
 ContentValues[] products = new ContentValues[10000];
 
 for (int i = 0; i < products.length; i++) {
@@ -920,7 +925,9 @@ Log.d("ProductProvider", "Добавлено строк: " + inserted);
 
 
 
-![Uploading image.png…]()
+<img width="644" height="576" alt="image" src="https://github.com/user-attachments/assets/13f07461-7b46-4632-a8e9-441bfd90d281" />
+
+
 class TimedService : Service() {
 
     private val handler = Handler(Looper.getMainLooper())
